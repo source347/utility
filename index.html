@@ -1,430 +1,307 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Gemini Utility Toolbox</title>
-    <!-- Load Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Customizing Tailwind for a Dark/Sleek Theme -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'primary-bg': '#1f2937', // Dark Slate
-                        'secondary-bg': '#374151', // Medium Slate
-                        'accent': '#34d399', // Emerald Green
-                        'text-light': '#f3f4f6', // Light Gray
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                }
-            }
-        }
-    </script>
-    <style>
-        /* General styling for the body and scrollbar */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #111827; /* Extra Dark Background */
-        }
-        /* Style for the active tab indicator */
-        .tab-button.active {
-            border-bottom: 3px solid #34d399;
-            color: #34d399;
-            font-weight: 600;
-        }
-        /* Custom scrollbar for textareas */
-        textarea::-webkit-scrollbar {
-            width: 8px;
-        }
-        textarea::-webkit-scrollbar-thumb {
-            background-color: #374151;
-            border-radius: 4px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090f1c">
+  <meta name="description" content="A free browser-based toolbox for text case conversion, secure password generation, and UTF-8 Base64 encoding and decoding.">
+  <title>Gemini Utility Toolbox — Free Developer Tools</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        colors: { ink: '#090f1c', panel: '#111b2b', raised: '#182538', line: '#26364b', mint: '#5eead4', muted: '#91a2b8' },
+        fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['DM Mono', 'monospace'] },
+        boxShadow: { glow: '0 0 40px rgba(94,234,212,.08)' }
+      }}
+    };
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body { background: radial-gradient(ellipse at 50% -20%, #1b3445 0, #090f1c 55%); min-height: 100vh; }
+    .tool-tab[aria-selected="true"] { color: #5eead4; background: rgba(94,234,212,.09); border-color: rgba(94,234,212,.35); }
+    .tool-tab:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid #5eead4; outline-offset: 3px; }
+    textarea, input { color-scheme: dark; }
+    .mono-output { font-family: 'DM Mono', monospace; overflow-wrap: anywhere; }
+    .meter-fill { transition: width .25s ease; }
+    ::selection { background: rgba(94,234,212,.25); }
+  </style>
 </head>
-<body class="min-h-screen text-text-light p-4 md:p-8">
-
-    <div class="max-w-4xl mx-auto">
-        <header class="text-center mb-10">
-            <h1 class="text-4xl font-extrabold text-accent">The Gemini Utility Toolbox</h1>
-            <p class="text-lg text-gray-400 mt-2">Essential tools for developers and everyday tasks.</p>
-        </header>
-
-        <!-- Tool Selection Tabs -->
-        <div class="flex border-b border-secondary-bg mb-8">
-            <button id="tab-case" class="tab-button active py-3 px-4 transition duration-300 text-text-light hover:text-accent focus:outline-none" onclick="showTool('case-converter')">
-                Text Case Converter
-            </button>
-            <button id="tab-password" class="tab-button py-3 px-4 transition duration-300 text-text-light hover:text-accent focus:outline-none" onclick="showTool('password-generator')">
-                Secure Password
-            </button>
-            <button id="tab-base64" class="tab-button py-3 px-4 transition duration-300 text-text-light hover:text-accent focus:outline-none" onclick="showTool('base64-converter')">
-                Base64 Converter
-            </button>
+<body class="font-sans text-slate-100 antialiased">
+  <main class="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
+    <header class="mb-9">
+      <div class="mb-5 flex items-center gap-2 text-xs font-semibold uppercase tracking-[.22em] text-mint">
+        <span class="h-2 w-2 rounded-full bg-mint shadow-[0_0_12px_#5eead4]"></span>
+        Browser-based utilities
+      </div>
+      <div class="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+        <div>
+          <h1 class="text-3xl font-extrabold tracking-tight sm:text-5xl">Gemini Utility <span class="text-mint">Toolbox</span></h1>
+          <p class="mt-3 max-w-xl text-sm leading-6 text-muted sm:text-base">Three practical tools for everyday text and developer workflows. Fast, private, and ready to use in your browser.</p>
         </div>
-
-        <!-- Tool Containers -->
-        <div id="tool-container">
-
-            <!-- 1. Case Converter Tool -->
-            <div id="case-converter" class="tool-content p-6 bg-primary-bg rounded-xl shadow-2xl">
-                <h2 class="text-2xl font-semibold mb-4 text-accent">Text Case Converter</h2>
-                <textarea id="case-input" rows="8" class="w-full p-4 bg-secondary-bg text-text-light rounded-lg border border-gray-600 focus:border-accent focus:ring-1 focus:ring-accent transition duration-300 resize-none" placeholder="Paste your text here to change its case..."></textarea>
-                <div class="mt-4 flex flex-wrap gap-4">
-                    <button class="flex-1 min-w-[120px] bg-accent hover:bg-emerald-500 text-primary-bg font-bold py-3 px-6 rounded-full transition duration-300 shadow-md transform hover:scale-[1.02]" onclick="changeCase('upper')">
-                        UPPERCASE
-                    </button>
-                    <button class="flex-1 min-w-[120px] bg-accent hover:bg-emerald-500 text-primary-bg font-bold py-3 px-6 rounded-full transition duration-300 shadow-md transform hover:scale-[1.02]" onclick="changeCase('lower')">
-                        lowercase
-                    </button>
-                    <button class="flex-1 min-w-[120px] bg-accent hover:bg-emerald-500 text-primary-bg font-bold py-3 px-6 rounded-full transition duration-300 shadow-md transform hover:scale-[1.02]" onclick="changeCase('title')">
-                        Title Case
-                    </button>
-                    <button class="flex-1 min-w-[120px] bg-gray-600 hover:bg-gray-700 text-text-light font-bold py-3 px-6 rounded-full transition duration-300 shadow-md transform hover:scale-[1.02]" onclick="copyToClipboard('case-input')">
-                        Copy Result
-                    </button>
-                </div>
-                <div id="case-message" class="mt-3 text-sm text-center text-gray-400 h-5"></div>
-            </div>
-
-            <!-- 2. Password Generator Tool (Hidden by Default) -->
-            <div id="password-generator" class="tool-content p-6 bg-primary-bg rounded-xl shadow-2xl hidden">
-                <h2 class="text-2xl font-semibold mb-6 text-accent">Secure Password Generator</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Settings -->
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between bg-secondary-bg p-3 rounded-lg">
-                            <label for="password-length" class="text-text-light">Length (8 - 32)</label>
-                            <input type="number" id="password-length" value="16" min="8" max="32" class="w-20 p-2 bg-primary-bg text-center rounded-md border border-gray-600 focus:border-accent focus:ring-1 focus:ring-accent">
-                        </div>
-                        <div class="space-y-2 p-3 bg-secondary-bg rounded-lg">
-                            <div class="flex items-center justify-between">
-                                <label for="include-uppercase" class="text-text-light">Include Uppercase (A-Z)</label>
-                                <input type="checkbox" id="include-uppercase" checked class="h-5 w-5 text-accent rounded focus:ring-accent bg-gray-600 border-gray-500">
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <label for="include-lowercase" class="text-text-light">Include Lowercase (a-z)</label>
-                                <input type="checkbox" id="include-lowercase" checked class="h-5 w-5 text-accent rounded focus:ring-accent bg-gray-600 border-gray-500">
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <label for="include-numbers" class="text-text-light">Include Numbers (0-9)</label>
-                                <input type="checkbox" id="include-numbers" checked class="h-5 w-5 text-accent rounded focus:ring-accent bg-gray-600 border-gray-500">
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <label for="include-symbols" class="text-text-light">Include Symbols (!@#$)</label>
-                                <input type="checkbox" id="include-symbols" class="h-5 w-5 text-accent rounded focus:ring-accent bg-gray-600 border-gray-500">
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Output -->
-                    <div class="flex flex-col justify-between">
-                        <div>
-                            <p class="mb-2 text-gray-400">Generated Password:</p>
-                            <input type="text" id="password-output" readonly placeholder="Click 'Generate' to create a password" class="w-full p-4 bg-secondary-bg text-accent text-lg font-mono rounded-lg border border-gray-600 focus:outline-none select-all cursor-text">
-                        </div>
-                        <div class="mt-6 flex flex-col sm:flex-row gap-4">
-                            <button class="sm:flex-1 bg-accent hover:bg-emerald-500 text-primary-bg font-bold py-3 px-6 rounded-full transition duration-300 shadow-md transform hover:scale-[1.02]" onclick="generatePassword()">
-                                Generate Password
-                            </button>
-                            <button class="sm:flex-1 bg-gray-600 hover:bg-gray-700 text-text-light font-bold py-3 px-6 rounded-full transition duration-300 shadow-md transform hover:scale-[1.02]" onclick="copyToClipboard('password-output')">
-                                Copy Password
-                            </button>
-                        </div>
-                        <div id="password-message" class="mt-3 text-sm text-center text-gray-400 h-5"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 3. Base64 Converter Tool (Hidden by Default) -->
-            <div id="base64-converter" class="tool-content p-6 bg-primary-bg rounded-xl shadow-2xl hidden">
-                <h2 class="text-2xl font-semibold mb-4 text-accent">Base64 Encoder/Decoder</h2>
-
-                <label for="b64-input" class="block mb-2 text-gray-400">Input Text or Base64 String:</label>
-                <textarea id="b64-input" rows="6" class="w-full p-4 bg-secondary-bg text-text-light rounded-lg border border-gray-600 focus:border-accent focus:ring-1 focus:ring-accent transition duration-300 resize-none" placeholder="Enter text to encode or a Base64 string to decode..."></textarea>
-
-                <div class="mt-4 flex flex-wrap gap-4">
-                    <button class="flex-1 min-w-[120px] bg-accent hover:bg-emerald-500 text-primary-bg font-bold py-3 px-6 rounded-full transition duration-300 shadow-md transform hover:scale-[1.02]" onclick="base64Convert('encode')">
-                        Encode to Base64
-                    </button>
-                    <button class="flex-1 min-w-[120px] bg-accent hover:bg-emerald-500 text-primary-bg font-bold py-3 px-6 rounded-full transition duration-300 shadow-md transform hover:scale-[1.02]" onclick="base64Convert('decode')">
-                        Decode from Base64
-                    </button>
-                </div>
-
-                <label for="b64-output" class="block mt-6 mb-2 text-gray-400">Output Result:</label>
-                <textarea id="b64-output" rows="6" readonly class="w-full p-4 bg-secondary-bg text-text-light rounded-lg border border-gray-600 focus:outline-none resize-none" placeholder="Result will appear here..."></textarea>
-                
-                <div class="mt-4 text-right">
-                    <button class="bg-gray-600 hover:bg-gray-700 text-text-light font-bold py-3 px-6 rounded-full transition duration-300 shadow-md transform hover:scale-[1.02]" onclick="copyToClipboard('b64-output')">
-                        Copy Result
-                    </button>
-                </div>
-                <div id="b64-message" class="mt-3 text-sm text-center text-gray-400 h-5"></div>
-            </div>
-
+        <div class="flex items-center gap-2 self-start rounded-full border border-line bg-panel/80 px-3 py-2 text-xs text-muted sm:self-auto">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 3 8 7 10 4-2 7-5.5 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+          Processing stays in your browser
         </div>
-    </div>
+      </div>
+    </header>
 
-    <!-- JavaScript Logic -->
-    <script>
-        // --- Global Utility Functions ---
+    <nav class="mb-5 grid grid-cols-1 gap-2 sm:grid-cols-3" role="tablist" aria-label="Utility tools">
+      <button id="tab-case" class="tool-tab flex items-center gap-3 rounded-xl border border-line bg-panel/70 px-4 py-3 text-left transition hover:border-slate-500" role="tab" aria-selected="true" aria-controls="case-converter" tabindex="0" data-tool="case">
+        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-raised text-mint font-bold">Aa</span>
+        <span><span class="block text-sm font-semibold">Text case</span><span class="block text-xs text-muted">Transform text</span></span>
+      </button>
+      <button id="tab-password" class="tool-tab flex items-center gap-3 rounded-xl border border-line bg-panel/70 px-4 py-3 text-left transition hover:border-slate-500" role="tab" aria-selected="false" aria-controls="password-generator" tabindex="-1" data-tool="password">
+        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-raised text-mint">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 4v3"/></svg>
+        </span>
+        <span><span class="block text-sm font-semibold">Password generator</span><span class="block text-xs text-muted">Create random passwords</span></span>
+      </button>
+      <button id="tab-base64" class="tool-tab flex items-center gap-3 rounded-xl border border-line bg-panel/70 px-4 py-3 text-left transition hover:border-slate-500" role="tab" aria-selected="false" aria-controls="base64-converter" tabindex="-1" data-tool="base64">
+        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-raised font-mono text-xs text-mint">64</span>
+        <span><span class="block text-sm font-semibold">Base64 converter</span><span class="block text-xs text-muted">Encode and decode UTF-8</span></span>
+      </button>
+    </nav>
 
-        /**
-         * Copies text from a specified input/textarea element to the clipboard.
-         * @param {string} elementId - The ID of the element containing the text to copy.
-         */
-        function copyToClipboard(elementId) {
-            const element = document.getElementById(elementId);
-            let textToCopy;
-            let messageElement;
+    <section id="case-converter" class="tool-panel rounded-2xl border border-line bg-panel/90 p-5 shadow-glow sm:p-7" role="tabpanel" aria-labelledby="tab-case">
+      <div class="mb-5 flex flex-wrap items-start justify-between gap-3">
+        <div><p class="text-xs font-semibold uppercase tracking-[.18em] text-mint">01 / Text</p><h2 class="mt-1 text-xl font-bold">Text case converter</h2><p class="mt-1 text-sm text-muted">Convert text without changing its content or line breaks.</p></div>
+        <span class="rounded-lg border border-line bg-raised px-3 py-1.5 text-xs text-muted">Live input</span>
+      </div>
+      <label for="case-input" class="mb-2 block text-sm font-medium text-slate-300">Your text</label>
+      <textarea id="case-input" rows="8" spellcheck="false" placeholder="Paste or type text here…" class="w-full resize-y rounded-xl border border-line bg-ink/80 p-4 text-sm leading-6 placeholder:text-slate-600 focus:border-mint focus:outline-none"></textarea>
+      <div class="mt-2 flex justify-between text-xs text-muted"><span id="case-count">0 characters</span><button id="case-clear" class="hover:text-mint" type="button">Clear input</button></div>
+      <div class="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <button class="action-primary" data-case="upper" type="button">UPPERCASE</button>
+        <button class="action-primary" data-case="lower" type="button">lowercase</button>
+        <button class="action-primary" data-case="title" type="button">Title Case</button>
+        <button id="case-copy" class="action-secondary" type="button">Copy result</button>
+      </div>
+      <p id="case-message" class="mt-4 min-h-5 text-sm text-muted" role="status" aria-live="polite"></p>
+    </section>
 
-            if (element.tagName === 'TEXTAREA' || element.tagName === 'INPUT') {
-                textToCopy = element.value;
-                // Determine which message element to use based on the tool
-                if (elementId === 'case-input') {
-                    messageElement = document.getElementById('case-message');
-                } else if (elementId === 'password-output') {
-                    messageElement = document.getElementById('password-message');
-                } else if (elementId === 'b64-output') {
-                    messageElement = document.getElementById('b64-message');
-                }
-            }
+    <section id="password-generator" class="tool-panel hidden rounded-2xl border border-line bg-panel/90 p-5 shadow-glow sm:p-7" role="tabpanel" aria-labelledby="tab-password" hidden>
+      <div class="mb-6"><p class="text-xs font-semibold uppercase tracking-[.18em] text-mint">02 / Security</p><h2 class="mt-1 text-xl font-bold">Secure password generator</h2><p class="mt-1 text-sm text-muted">Generate passwords with the Web Crypto API using cryptographically secure random values.</p></div>
+      <div class="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
+        <div class="space-y-5">
+          <div><div class="mb-2 flex justify-between"><label for="password-length" class="text-sm font-medium">Password length</label><output id="length-value" for="password-length" class="font-mono text-sm text-mint">20</output></div><input id="password-length" type="range" min="8" max="64" value="20" class="w-full accent-teal-300"><div class="mt-1 flex justify-between text-xs text-muted"><span>8 characters</span><span>64 characters</span></div></div>
+          <fieldset class="rounded-xl border border-line bg-ink/40 p-4"><legend class="px-1 text-sm font-medium">Character sets</legend>
+            <div class="mt-1 space-y-3">
+              <label class="flex items-center justify-between text-sm"><span>Uppercase <span class="text-muted">(A–Z)</span></span><input id="include-uppercase" type="checkbox" checked class="h-4 w-4 accent-teal-300"></label>
+              <label class="flex items-center justify-between text-sm"><span>Lowercase <span class="text-muted">(a–z)</span></span><input id="include-lowercase" type="checkbox" checked class="h-4 w-4 accent-teal-300"></label>
+              <label class="flex items-center justify-between text-sm"><span>Numbers <span class="text-muted">(0–9)</span></span><input id="include-numbers" type="checkbox" checked class="h-4 w-4 accent-teal-300"></label>
+              <label class="flex items-center justify-between text-sm"><span>Symbols <span class="text-muted">(!@#$…)</span></span><input id="include-symbols" type="checkbox" checked class="h-4 w-4 accent-teal-300"></label>
+            </div>
+          </fieldset>
+          <button id="generate-password" class="action-primary w-full" type="button">Generate password <span aria-hidden="true">↗</span></button>
+        </div>
+        <div class="flex flex-col">
+          <label for="password-output" class="mb-2 text-sm font-medium">Generated password</label>
+          <div class="relative"><textarea id="password-output" rows="4" readonly spellcheck="false" placeholder="Your password will appear here…" class="mono-output w-full resize-none rounded-xl border border-line bg-ink/80 p-4 pr-12 text-base leading-7 text-mint placeholder:font-sans placeholder:text-sm placeholder:text-slate-600 focus:border-mint focus:outline-none"></textarea><button id="password-copy" type="button" aria-label="Copy password" title="Copy password" class="absolute right-3 top-3 rounded-lg p-2 text-muted hover:bg-raised hover:text-mint"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg></button></div>
+          <div class="mt-4"><div class="mb-2 flex justify-between text-xs"><span class="text-muted">Estimated entropy</span><span id="password-entropy" class="font-mono text-slate-300">—</span></div><div class="h-1.5 overflow-hidden rounded-full bg-raised"><div id="entropy-meter" class="meter-fill h-full w-0 rounded-full bg-mint"></div></div><p class="mt-2 text-xs text-muted">Entropy estimate assumes a uniformly selected character from the enabled sets.</p></div>
+          <p id="password-message" class="mt-4 min-h-5 text-sm text-muted" role="status" aria-live="polite"></p>
+        </div>
+      </div>
+    </section>
 
-            if (!textToCopy) {
-                if (messageElement) {
-                    messageElement.textContent = "Nothing to copy!";
-                    setTimeout(() => messageElement.textContent = '', 2000);
-                }
-                return;
-            }
+    <section id="base64-converter" class="tool-panel hidden rounded-2xl border border-line bg-panel/90 p-5 shadow-glow sm:p-7" role="tabpanel" aria-labelledby="tab-base64" hidden>
+      <div class="mb-6"><p class="text-xs font-semibold uppercase tracking-[.18em] text-mint">03 / Encoding</p><h2 class="mt-1 text-xl font-bold">Base64 encoder / decoder</h2><p class="mt-1 text-sm text-muted">Encode plain text or decode Base64 strings. UTF-8 characters are supported.</p></div>
+      <label for="b64-input" class="mb-2 block text-sm font-medium">Input</label>
+      <textarea id="b64-input" rows="6" spellcheck="false" placeholder="Enter text to encode, or a Base64 string to decode…" class="w-full resize-y rounded-xl border border-line bg-ink/80 p-4 font-mono text-sm leading-6 placeholder:font-sans placeholder:text-slate-600 focus:border-mint focus:outline-none"></textarea>
+      <div class="mt-4 grid grid-cols-2 gap-2 sm:max-w-md"><button id="b64-encode" class="action-primary" type="button">Encode to Base64</button><button id="b64-decode" class="action-secondary" type="button">Decode from Base64</button></div>
+      <div class="mb-2 mt-6 flex items-center justify-between"><label for="b64-output" class="text-sm font-medium">Output</label><button id="b64-copy" class="text-xs font-semibold text-mint hover:text-white" type="button">Copy output</button></div>
+      <textarea id="b64-output" rows="6" readonly spellcheck="false" placeholder="Your result will appear here…" class="w-full resize-y rounded-xl border border-line bg-ink/80 p-4 font-mono text-sm leading-6 placeholder:font-sans placeholder:text-slate-600 focus:outline-none"></textarea>
+      <p id="b64-message" class="mt-4 min-h-5 text-sm text-muted" role="status" aria-live="polite"></p>
+    </section>
 
-            try {
-                // Select the text in the field
-                element.select();
-                element.setSelectionRange(0, 99999); // For mobile devices
+    <footer class="mt-8 flex flex-col justify-between gap-2 border-t border-line/70 pt-5 text-xs text-muted sm:flex-row"><span>Gemini Utility Toolbox</span><span>No account required · No input data is sent to a server by these tools</span></footer>
+  </main>
 
-                // Copy the text
-                document.execCommand('copy');
-                
-                if (messageElement) {
-                    messageElement.textContent = `Content copied to clipboard!`;
-                    setTimeout(() => messageElement.textContent = '', 2000);
-                }
+  <style>
+    .action-primary { border:1px solid rgba(94,234,212,.25); border-radius:.75rem; background:#5eead4; color:#09201f; padding:.8rem 1rem; font-size:.875rem; font-weight:700; transition:background .15s,transform .15s; }
+    .action-primary:hover { background:#99f6e4; transform:translateY(-1px); }
+    .action-secondary { border:1px solid #34465c; border-radius:.75rem; background:#182538; color:#dbe6f2; padding:.8rem 1rem; font-size:.875rem; font-weight:600; transition:border-color .15s,background .15s; }
+    .action-secondary:hover { border-color:#5eead4; background:#203249; }
+    .action-primary:disabled,.action-secondary:disabled { opacity:.45; cursor:not-allowed; transform:none; }
+  </style>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const announce = (id, message, error = false) => {
+      const el = $(id);
+      el.textContent = message;
+      el.classList.toggle('text-rose-300', error);
+      el.classList.toggle('text-muted', !error);
+    };
 
-            } catch (err) {
-                console.error('Could not copy text: ', err);
-                if (messageElement) {
-                    messageElement.textContent = `Copy failed. Use Ctrl+C or Cmd+C.`;
-                    setTimeout(() => messageElement.textContent = '', 2000);
-                }
-            }
+    // Accessible tab navigation, including arrow-key support.
+    const tabs = [...document.querySelectorAll('[role="tab"]')];
+    function showTool(name, moveFocus = false) {
+      tabs.forEach((tab) => {
+        const active = tab.dataset.tool === name;
+        tab.setAttribute('aria-selected', String(active));
+        tab.tabIndex = active ? 0 : -1;
+        if (active && moveFocus) tab.focus();
+      });
+      document.querySelectorAll('.tool-panel').forEach((panel) => {
+        const active = panel.id === ({case:'case-converter',password:'password-generator',base64:'base64-converter'})[name];
+        panel.hidden = !active;
+        panel.classList.toggle('hidden', !active);
+      });
+    }
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => showTool(tab.dataset.tool));
+      tab.addEventListener('keydown', (event) => {
+        if (!['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return;
+        event.preventDefault();
+        let next = index;
+        if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+        if (event.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length;
+        if (event.key === 'Home') next = 0;
+        if (event.key === 'End') next = tabs.length - 1;
+        showTool(tabs[next].dataset.tool, true);
+      });
+    });
+
+    // Text case converter.
+    const caseInput = $('case-input');
+    function updateCaseCount() {
+      const count = caseInput.value.length;
+      $('case-count').textContent = count.toLocaleString() + (count === 1 ? ' character' : ' characters');
+    }
+    caseInput.addEventListener('input', updateCaseCount);
+    $('case-clear').addEventListener('click', () => {
+      caseInput.value = '';
+      updateCaseCount();
+      announce('case-message', 'Input cleared.');
+      caseInput.focus();
+    });
+    document.querySelectorAll('[data-case]').forEach((button) => {
+      button.addEventListener('click', () => {
+        if (!caseInput.value) return announce('case-message', 'Enter some text first.', true);
+        const type = button.dataset.case;
+        if (type === 'upper') caseInput.value = caseInput.value.toLocaleUpperCase();
+        if (type === 'lower') caseInput.value = caseInput.value.toLocaleLowerCase();
+        if (type === 'title') caseInput.value = caseInput.value.toLocaleLowerCase().replace(/(^|[\s\u2019'-])([\p{L}\p{N}])/gu, (match, boundary, char) => boundary + char.toLocaleUpperCase());
+        updateCaseCount();
+        announce('case-message', 'Text converted to ' + type + ' case.');
+      });
+    });
+
+    async function copyText(value, messageId, label) {
+      if (!value) return announce(messageId, 'There is nothing to copy.', true);
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(value);
+        } else {
+          const helper = document.createElement('textarea');
+          helper.value = value;
+          helper.style.position = 'fixed';
+          helper.style.opacity = '0';
+          document.body.appendChild(helper);
+          helper.select();
+          const copied = document.execCommand('copy');
+          helper.remove();
+          if (!copied) throw new Error('Clipboard unavailable');
         }
+        announce(messageId, label + ' copied to clipboard.');
+      } catch (error) {
+        announce(messageId, 'Clipboard access failed. Select the text and copy it manually.', true);
+      }
+    }
+    $('case-copy').addEventListener('click', () => copyText(caseInput.value, 'case-message', 'Text'));
+    $('password-copy').addEventListener('click', () => copyText($('password-output').value, 'password-message', 'Password'));
+    $('b64-copy').addEventListener('click', () => copyText($('b64-output').value, 'b64-message', 'Output'));
 
-        /**
-         * Handles the tab switching logic.
-         * @param {string} toolId - The ID of the tool container to show.
-         */
-        function showTool(toolId) {
-            // Hide all tool contents
-            document.querySelectorAll('.tool-content').forEach(el => {
-                el.classList.add('hidden');
-            });
-
-            // Deactivate all tab buttons
-            document.querySelectorAll('.tab-button').forEach(el => {
-                el.classList.remove('active');
-            });
-
-            // Show the selected tool content
-            document.getElementById(toolId).classList.remove('hidden');
-
-            // Activate the corresponding tab button
-            document.getElementById('tab-' + toolId.split('-')[0]).classList.add('active');
+    // Uniform random integer generation avoids modulo bias.
+    function secureRandomInt(max) {
+      if (!Number.isSafeInteger(max) || max < 1 || max > 0x100000000) throw new Error('Invalid random range.');
+      const range = 0x100000000;
+      const limit = range - (range % max);
+      const values = new Uint32Array(1);
+      do { crypto.getRandomValues(values); } while (values[0] >= limit);
+      return values[0] % max;
+    }
+    const CHAR_SETS = {
+      upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+      lower: 'abcdefghijklmnopqrstuvwxyz',
+      number: '0123456789',
+      symbol: '!@#$%^&*()_+-=[]{}|;:,.<>?'
+    };
+    $('password-length').addEventListener('input', () => {
+      $('length-value').textContent = $('password-length').value;
+    });
+    $('generate-password').addEventListener('click', () => {
+      const length = Number($('password-length').value);
+      const enabled = [
+        $('include-uppercase').checked ? CHAR_SETS.upper : '',
+        $('include-lowercase').checked ? CHAR_SETS.lower : '',
+        $('include-numbers').checked ? CHAR_SETS.number : '',
+        $('include-symbols').checked ? CHAR_SETS.symbol : ''
+      ].filter(Boolean);
+      if (!enabled.length) return announce('password-message', 'Select at least one character set.', true);
+      if (length < 8 || length > 64) return announce('password-message', 'Choose a length between 8 and 64.', true);
+      try {
+        const pool = enabled.join('');
+        const chars = enabled.map((set) => set[secureRandomInt(set.length)]);
+        while (chars.length < length) chars.push(pool[secureRandomInt(pool.length)]);
+        for (let i = chars.length - 1; i > 0; i--) {
+          const j = secureRandomInt(i + 1);
+          [chars[i], chars[j]] = [chars[j], chars[i]];
         }
+        $('password-output').value = chars.join('');
+        const entropy = length * Math.log2(pool.length);
+        $('password-entropy').textContent = entropy.toFixed(1) + ' bits';
+        $('entropy-meter').style.width = Math.min(100, entropy / 256 * 100) + '%';
+        announce('password-message', 'Password generated locally.');
+      } catch (error) {
+        announce('password-message', 'Secure random generation is unavailable in this browser context.', true);
+      }
+    });
 
-        // --- 1. Text Case Converter Logic ---
+    // UTF-8-safe Base64 conversion, including non-ASCII input.
+    function bytesToBase64(bytes) {
+      let binary = '';
+      const chunkSize = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+      }
+      return btoa(binary);
+    }
+    function base64ToBytes(value) {
+      const compact = value.replace(/[\t\n\r ]/g, '');
+      if (!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(compact)) {
+        throw new Error('The input is not valid standard Base64.');
+      }
+      const binary = atob(compact);
+      return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+    }
+    $('b64-encode').addEventListener('click', () => {
+      const input = $('b64-input').value;
+      if (!input) return announce('b64-message', 'Enter text to encode.', true);
+      $('b64-output').value = bytesToBase64(new TextEncoder().encode(input));
+      announce('b64-message', 'Text encoded successfully as UTF-8 Base64.');
+    });
+    $('b64-decode').addEventListener('click', () => {
+      const input = $('b64-input').value;
+      if (!input.trim()) return announce('b64-message', 'Enter a Base64 string to decode.', true);
+      try {
+        $('b64-output').value = new TextDecoder('utf-8', { fatal: true }).decode(base64ToBytes(input));
+        announce('b64-message', 'Base64 decoded successfully as UTF-8 text.');
+      } catch (error) {
+        $('b64-output').value = '';
+        announce('b64-message', error.message || 'Unable to decode this input as UTF-8 Base64.', true);
+      }
+    });
 
-        /**
-         * Changes the case of the text in the case-input textarea.
-         * @param {string} type - 'upper', 'lower', or 'title'.
-         */
-        function changeCase(type) {
-            const inputEl = document.getElementById('case-input');
-            const text = inputEl.value;
-            let result = '';
+    showTool('case');
+  </script>
 
-            if (!text) return;
-
-            switch (type) {
-                case 'upper':
-                    result = text.toUpperCase();
-                    break;
-                case 'lower':
-                    result = text.toLowerCase();
-                    break;
-                case 'title':
-                    // Simple title case (capitalizes the first letter of every word)
-                    result = text.toLowerCase().split(' ')
-                        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                        .join(' ');
-                    break;
-            }
-
-            inputEl.value = result;
-        }
-
-        // --- 2. Secure Password Generator Logic ---
-
-        const CHAR_SETS = {
-            lower: 'abcdefghijklmnopqrstuvwxyz',
-            upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-            number: '0123456789',
-            symbol: '!@#$%^&*()_+~`|}{[]:;?><,./-='
-        };
-
-        /**
-         * Generates a cryptographically secure random password.
-         */
-        function generatePassword() {
-            const length = parseInt(document.getElementById('password-length').value, 10);
-
-            if (length < 8 || length > 32 || isNaN(length)) {
-                document.getElementById('password-message').textContent = "Length must be between 8 and 32.";
-                setTimeout(() => document.getElementById('password-message').textContent = '', 3000);
-                return;
-            }
-
-            const includeUpper = document.getElementById('include-uppercase').checked;
-            const includeLower = document.getElementById('include-lowercase').checked;
-            const includeNumber = document.getElementById('include-numbers').checked;
-            const includeSymbol = document.getElementById('include-symbols').checked;
-
-            if (!(includeUpper || includeLower || includeNumber || includeSymbol)) {
-                document.getElementById('password-message').textContent = "Select at least one character type.";
-                setTimeout(() => document.getElementById('password-message').textContent = '', 3000);
-                return;
-            }
-
-            let allChars = '';
-            let guaranteedChars = [];
-
-            if (includeLower) {
-                allChars += CHAR_SETS.lower;
-                guaranteedChars.push(getRandomChar(CHAR_SETS.lower));
-            }
-            if (includeUpper) {
-                allChars += CHAR_SETS.upper;
-                guaranteedChars.push(getRandomChar(CHAR_SETS.upper));
-            }
-            if (includeNumber) {
-                allChars += CHAR_SETS.number;
-                guaranteedChars.push(getRandomChar(CHAR_SETS.number));
-            }
-            if (includeSymbol) {
-                allChars += CHAR_SETS.symbol;
-                guaranteedChars.push(getRandomChar(CHAR_SETS.symbol));
-            }
-
-            // Fill the rest of the password length
-            let passwordArray = guaranteedChars;
-            const remainingLength = length - guaranteedChars.length;
-
-            for (let i = 0; i < remainingLength; i++) {
-                passwordArray.push(getRandomChar(allChars));
-            }
-
-            // Shuffle the array to randomize the position of the guaranteed chars
-            for (let i = passwordArray.length - 1; i > 0; i--) {
-                const j = getRandomIndex(i + 1);
-                [passwordArray[i], passwordArray[j]] = [passwordArray[j], passwordArray[i]];
-            }
-
-            document.getElementById('password-output').value = passwordArray.join('');
-            document.getElementById('password-message').textContent = "Password generated successfully!";
-            setTimeout(() => document.getElementById('password-message').textContent = '', 2000);
-        }
-
-        /**
-         * Returns a single random character from a given character set string.
-         * @param {string} charSet - The string of characters to pick from.
-         * @returns {string} A single random character.
-         */
-        function getRandomChar(charSet) {
-            const randomIndex = getRandomIndex(charSet.length);
-            return charSet[randomIndex];
-        }
-
-        /**
-         * Returns a cryptographically secure random integer index.
-         * @param {number} max - The exclusive upper bound for the index.
-         * @returns {number} A random integer between 0 (inclusive) and max (exclusive).
-         */
-        function getRandomIndex(max) {
-            const array = new Uint32Array(1);
-            window.crypto.getRandomValues(array);
-            return array[0] % max;
-        }
-
-
-        // --- 3. Base64 Converter Logic ---
-
-        /**
-         * Encodes text to Base64 or decodes Base64 to text.
-         * @param {string} action - 'encode' or 'decode'.
-         */
-        function base64Convert(action) {
-            const inputEl = document.getElementById('b64-input');
-            const outputEl = document.getElementById('b64-output');
-            const text = inputEl.value;
-            let result = '';
-            const messageEl = document.getElementById('b64-message');
-            
-            outputEl.value = ''; // Clear previous output
-
-            if (!text) {
-                messageEl.textContent = "Input field cannot be empty.";
-                setTimeout(() => messageEl.textContent = '', 2000);
-                return;
-            }
-
-            try {
-                if (action === 'encode') {
-                    // Use btoa for encoding, must handle non-ASCII characters first
-                    result = btoa(unescape(encodeURIComponent(text)));
-                    messageEl.textContent = "Text encoded to Base64.";
-                } else if (action === 'decode') {
-                    // Use atob for decoding, must handle non-ASCII characters after decoding
-                    result = decodeURIComponent(escape(atob(text)));
-                    messageEl.textContent = "Base64 decoded to text.";
-                }
-                
-                outputEl.value = result;
-
-            } catch (e) {
-                messageEl.textContent = `Error: Invalid input for ${action} operation.`;
-                console.error(e);
-            }
-            
-            setTimeout(() => messageEl.textContent = '', 3000);
-        }
-
-        // Initialize by calling the showTool function for the default tab
-        document.addEventListener('DOMContentLoaded', () => {
-            showTool('case-converter');
-        });
-
-    </script>
-
-
-<script type="module">
-  import { initDonationWidget }
-    from 'https://source347.github.io/donation-widget/donation-widget.js';
-
-  initDonationWidget();
-</script>
+  <script type="module">
+    import { initDonationWidget } from 'https://source347.github.io/donation-widget/donation-widget.js';
+    initDonationWidget();
+  </script>
 </body>
 </html>
